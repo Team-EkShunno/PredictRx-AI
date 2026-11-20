@@ -548,15 +548,20 @@ export const PrescriptionAnalysisPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Header & Reference Cases Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center space-x-2">
-            <span>{t('title', 'Prescription OCR & Clinical Safety Analysis')}</span>
-            <Badge variant="outline" className="text-xs border-teal-500/30 text-teal-600 dark:text-teal-400 font-mono">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+              {t('title', 'Prescription OCR & Clinical Safety Analysis')}
+            </h2>
+            <Badge
+              variant="outline"
+              className="text-[11px] px-2.5 py-0.5 border-teal-500/30 text-teal-700 dark:text-teal-300 bg-teal-500/10 font-mono whitespace-nowrap shrink-0 inline-flex items-center font-medium"
+            >
               CDSS Engine v1.4
             </Badge>
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          </div>
+          <p className="text-xs text-muted-foreground">
             {t('subtitle', 'Extract handwritten/printed BD prescriptions, validate dosing syntax, and predict patient-specific pharmacotherapy risks.')}
           </p>
         </div>

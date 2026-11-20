@@ -145,14 +145,14 @@ export const PrescriptionCameraModal: React.FC<PrescriptionCameraModalProps> = (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent
         className={cn(
-          'p-0 overflow-hidden bg-slate-950 text-white gap-0 select-none z-50 transition-all duration-200 [&>button]:hidden',
+          'p-0 bg-slate-950 text-white gap-0 select-none z-50 flex flex-col justify-between transition-all duration-200 [&>button]:hidden',
           isFullscreen
-            ? 'fixed inset-0 left-0 top-0 translate-x-0 translate-y-0 transform-none w-screen h-screen max-w-none max-h-none rounded-none m-0 border-0 flex flex-col'
-            : 'max-w-xl w-[95vw] border border-emerald-500/30 rounded-2xl shadow-2xl'
+            ? '!fixed !inset-0 !left-0 !top-0 !right-0 !bottom-0 !translate-x-0 !translate-y-0 !transform-none !w-screen !w-[100dvw] !h-screen !h-[100dvh] !max-w-none !max-h-none !rounded-none !m-0 !border-0 overflow-hidden z-[999]'
+            : 'max-w-xl w-[95vw] h-auto max-h-[90dvh] border border-emerald-500/30 rounded-2xl shadow-2xl overflow-hidden'
         )}
       >
         {/* Header */}
-        <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 shrink-0">
+        <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/95 shrink-0 z-20">
           <div className="flex items-center space-x-2">
             <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
               <Camera className="h-4 w-4" />
@@ -200,11 +200,11 @@ export const PrescriptionCameraModal: React.FC<PrescriptionCameraModalProps> = (
           </div>
         </div>
 
-        {/* Viewport Area */}
+        {/* Viewport Area - Automatically scales without pushing footer offscreen */}
         <div
           className={cn(
-            'relative bg-black flex items-center justify-center overflow-hidden',
-            isFullscreen ? 'flex-1 w-full min-h-0' : 'aspect-[4/3] w-full'
+            'relative bg-black flex items-center justify-center overflow-hidden min-h-0 flex-1 w-full',
+            isFullscreen ? 'h-full' : 'max-h-[62dvh] aspect-[4/3] sm:aspect-auto'
           )}
         >
           {cameraError ? (
@@ -227,7 +227,7 @@ export const PrescriptionCameraModal: React.FC<PrescriptionCameraModalProps> = (
               <img
                 src={capturedDataUrl}
                 alt="Captured prescription"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain max-h-full"
               />
               <div className="absolute top-3 left-3 px-2 py-0.5 rounded bg-emerald-600/90 text-white text-[10px] font-mono tracking-wider">
                 CAPTURED // READY
@@ -248,7 +248,7 @@ export const PrescriptionCameraModal: React.FC<PrescriptionCameraModalProps> = (
                 ref={videoRef}
                 playsInline
                 muted
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain max-h-full"
               />
 
               {/* Viewfinder Target Framing Brackets */}
@@ -271,8 +271,8 @@ export const PrescriptionCameraModal: React.FC<PrescriptionCameraModalProps> = (
           )}
         </div>
 
-        {/* Action Controls Footer */}
-        <div className="p-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between shrink-0">
+        {/* Action Controls Footer - Pinned to bottom, always visible */}
+        <div className="px-4 py-3 sm:py-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between shrink-0 z-20 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {capturedDataUrl ? (
             <>
               <Button
