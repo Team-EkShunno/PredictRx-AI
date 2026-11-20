@@ -26,11 +26,11 @@ COPY ai_engine/ ./ai_engine/
 RUN mkdir -p uploads
 
 # Expose API port
-EXPOSE 8000
+EXPOSE 8080 8000
 
 # Healthcheck
 HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=5 \
-    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
 
 # Run database migrations (with resilient fallback), initial master seeding, and start production Uvicorn server
-CMD ["sh", "-c", "(alembic upgrade head || echo 'Alembic migration skipped or failed') && (python -m app.db.init_db || echo 'DB init skipped or failed') && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "(alembic upgrade head || echo 'Alembic migration skipped or failed') && (python -m app.db.init_db || echo 'DB init skipped or failed') && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
