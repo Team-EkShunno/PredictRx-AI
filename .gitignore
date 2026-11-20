@@ -97,3 +97,10 @@ PREDICTRX_*.md
 *.bak
 DEMO_SCRIPT.md
 docs/DEMO_SCRIPT.md
+
+# --- Documentation PDFs & Private Pitch Decks ---
+docs/PredictRx_Architecture_and_Features_Guide.pdf
+docs/PredictRx_Pitch_Deck.pdf
+docs/PredictRx_Setup_Run_and_Testing_Guide.pdf
+docs/*.pdf
+*.pdf
