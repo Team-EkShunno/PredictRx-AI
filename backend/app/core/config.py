@@ -33,16 +33,26 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:8000",
         "https://predict-rx-ai.vercel.app",
+        "https://predict-rx-ai.up.railway.app",
         "*",
     ]
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",") if i.strip()]
-        elif isinstance(v, (list, str)):
-            return v  # type: ignore
+        if isinstance(v, str):
+            v_str = v.strip()
+            if v_str.startswith("[") and v_str.endswith("]"):
+                import json
+                try:
+                    parsed = json.loads(v_str)
+                    if isinstance(parsed, list):
+                        return [str(i).strip() for i in parsed if str(i).strip()]
+                except Exception:
+                    pass
+            return [i.strip().strip('"').strip("'") for i in v_str.strip("[]").split(",") if i.strip().strip('"').strip("'")]
+        elif isinstance(v, list):
+            return [str(i).strip() for i in v if str(i).strip()]
         raise ValueError(v)
 
     # Isolated PredictRx PostgreSQL Database (Host Port 5434)
@@ -59,7 +69,7 @@ class Settings(BaseSettings):
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
         if self.DATABASE_URL:
-            url = self.DATABASE_URL
+            url = self.DATABASE_URL.strip().strip('"').strip("'")
             if url.startswith("postgres://"):
                 url = url.replace("postgres://", "postgresql+psycopg://", 1)
             elif url.startswith("postgresql://") and not url.startswith("postgresql+psycopg://"):
