@@ -23,6 +23,9 @@ import {
   Eye,
   FileCheck,
   RotateCcw,
+  Camera,
+  Clipboard,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +40,7 @@ import { BanglaPatientCompanion } from '@/components/clinical/BanglaPatientCompa
 import { ClinicianReviewModal } from '@/components/clinical/ClinicianReviewModal';
 import { DemoScenarioSwitcher } from '@/components/clinical/DemoScenarioSwitcher';
 import { PrescriptionScanningModal } from '@/components/clinical/PrescriptionScanningModal';
+import { PrescriptionCameraModal } from '@/components/clinical/PrescriptionCameraModal';
 import { analyzePrescription, fetchScenarioAnalysis } from '@/services/prescriptionService';
 import { PatientContext, PrescriptionAnalysisResult } from '@/types';
 import { MEDICAL_SAFETY_DISCLAIMER, GOLDEN_DEMO_SCENARIOS, GoldenDemoScenario, DEMO_PATIENTS_LIST } from '@/constants';
@@ -106,8 +110,94 @@ export const PrescriptionAnalysisPage: React.FC = () => {
     return searchParams.get('demo') === 'true' || searchParams.get('scenarios') === 'true';
   });
   const [isScanningModalDismissed, setIsScanningModalDismissed] = useState(false);
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
 
   const isBn = Boolean(i18n.language && i18n.language.startsWith('bn'));
+
+  // Global Clipboard Image Paste (Ctrl + V) Handler
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const activeEl = document.activeElement;
+      const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+      if (isInput) return;
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.startsWith('image/')) {
+          const blob = item.getAsFile();
+          if (blob) {
+            e.preventDefault();
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const pastedFile = new File([blob], `pasted_rx_${timestamp}.png`, {
+              type: blob.type,
+            });
+            toast.success(
+              isBn
+                ? '📋 ক্লিপবোর্ড থেকে প্রেসক্রিপশন ইমেজ যুক্ত করা হয়েছে!'
+                : '📋 Prescription image pasted from clipboard!'
+            );
+            processSelectedFile(pastedFile);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [isBn]);
+
+  const handlePasteFromClipboard = async () => {
+    try {
+      if (!navigator.clipboard?.read) {
+        toast.info(
+          isBn
+            ? 'ছবি কপি করে কিবোর্ড থেকে Ctrl + V চাপুন'
+            : 'Copy an image and press Ctrl + V on your keyboard'
+        );
+        return;
+      }
+
+      const clipboardItems = await navigator.clipboard.read();
+      let found = false;
+
+      for (const item of clipboardItems) {
+        for (const type of item.types) {
+          if (type.startsWith('image/')) {
+            const blob = await item.getType(type);
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const pastedFile = new File([blob], `clipboard_rx_${timestamp}.png`, { type });
+            found = true;
+            toast.success(
+              isBn
+                ? '📋 ক্লিপবোর্ড থেকে প্রেসক্রিপশন ইমেজ লোড হয়েছে!'
+                : '📋 Prescription image loaded from clipboard!'
+            );
+            processSelectedFile(pastedFile);
+            break;
+          }
+        }
+        if (found) break;
+      }
+
+      if (!found) {
+        toast.info(
+          isBn
+            ? 'ক্লিপবোর্ডে কোনো ইমেজ পাওয়া যায়নি। যেকোনো ছবি কপি করে সরাসরি Ctrl + V চাপুন।'
+            : 'No image found in clipboard. Copy an image and press Ctrl + V.'
+        );
+      }
+    } catch (err) {
+      toast.info(
+        isBn
+          ? 'কিবোর্ড থেকে সরাসরি Ctrl + V চেপে ছবি পেস্ট করুন'
+          : 'Press Ctrl + V to paste the copied image directly'
+      );
+    }
+  };
 
   // Form setup - Empty and clean by default
   const {
@@ -527,34 +617,76 @@ export const PrescriptionAnalysisPage: React.FC = () => {
 
             <CardContent className="space-y-4">
               {!file ? (
-                <div
-                  onDragEnter={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDragOver={handleDrag}
-                  onDrop={handleDrop}
-                  className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl transition text-center cursor-pointer ${
-                    dragActive
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50 hover:bg-muted/30'
-                  }`}
-                  onClick={() => document.getElementById('prescription-upload-input')?.click()}
-                >
-                  <div className="p-3 rounded-full bg-teal-50 dark:bg-teal-950/60 text-primary mb-2">
-                    <UploadCloud className="h-6 w-6" />
+                <div className="space-y-3">
+                  <div
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                    className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl transition text-center cursor-pointer ${
+                      dragActive
+                        ? 'border-emerald-500 bg-emerald-500/10'
+                        : 'border-border hover:border-emerald-500/50 hover:bg-muted/30'
+                    }`}
+                    onClick={() => document.getElementById('prescription-upload-input')?.click()}
+                  >
+                    <div className="p-3 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 mb-2">
+                      <UploadCloud className="h-6 w-6" />
+                    </div>
+                    <p className="text-xs font-semibold text-foreground">
+                      {isBn
+                        ? 'প্রেসক্রিপশন ফাইল নির্বাচন করুন বা ড্র্যাগ করে ছাড়ুন'
+                        : t('upload.dropPrompt', 'Click to select or drag & drop prescription')}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {isBn
+                        ? 'ফাইল আপলোড, ক্যামেরা ছবি অথবা যেকোনো ইমেজ কপি করে Ctrl + V দিয়ে সরাসরি পেস্ট করুন'
+                        : 'Browse file, capture with camera, or copy any image & paste with Ctrl + V'}
+                    </p>
+                    <input
+                      id="prescription-upload-input"
+                      type="file"
+                      accept="image/*,application/pdf"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
                   </div>
-                  <p className="text-xs font-semibold text-foreground">
-                    {t('upload.dropPrompt', 'Click to select or drag & drop prescription')}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    {t('upload.description', 'Bangla handwriting, printed hospital Rx, or camera snap')}
-                  </p>
-                  <input
-                    id="prescription-upload-input"
-                    type="file"
-                    accept="image/*,application/pdf"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
+
+                  {/* Quick Action Buttons: Browse, Camera, Paste */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById('prescription-upload-input')?.click()}
+                      className="h-8 text-[11px] font-medium border-border/70 hover:border-emerald-500/40 hover:bg-emerald-500/5 gap-1.5 px-2"
+                    >
+                      <UploadCloud className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="truncate">{isBn ? 'ফাইল বাছুন' : 'Browse File'}</span>
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsCameraModalOpen(true)}
+                      className="h-8 text-[11px] font-medium border-border/70 hover:border-emerald-500/40 hover:bg-emerald-500/5 gap-1.5 px-2"
+                    >
+                      <Camera className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+                      <span className="truncate">{isBn ? 'ক্যামেরা' : 'Camera'}</span>
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePasteFromClipboard}
+                      className="h-8 text-[11px] font-medium border-border/70 hover:border-emerald-500/40 hover:bg-emerald-500/5 gap-1.5 px-2"
+                    >
+                      <Clipboard className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                      <span className="truncate">{isBn ? 'পেস্ট (Ctrl+V)' : 'Paste (Ctrl+V)'}</span>
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="relative rounded-xl border border-border p-3 bg-muted/20">
@@ -591,15 +723,26 @@ export const PrescriptionAnalysisPage: React.FC = () => {
                     </div>
                   )}
 
-                  {isScanningFile && (
-                    <div className="mt-2.5 p-2 rounded-lg bg-teal-500/10 border border-teal-500/30 text-teal-800 dark:text-teal-200 text-xs flex items-center justify-between animate-pulse">
+                  {(isScanningFile || isAnalyzing) && (
+                    <div className="mt-2.5 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between animate-pulse">
                       <div className="flex items-center space-x-2">
-                        <RefreshCw className="h-3.5 w-3.5 animate-spin text-teal-600" />
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin text-emerald-600 dark:text-emerald-400" />
                         <span className="font-semibold text-[11px]">
-                          {isBn ? 'AI প্রেসক্রিপশন বিশ্লেষণ ও ফর্ম পূরণ করছে...' : 'AI Vision scanning & autofilling form...'}
+                          {isBn ? 'AI প্রেসক্রিপশন বিশ্লেষণ ব্যাকগ্রাউন্ডে চলছে...' : 'AI vision analyzing prescription in background...'}
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono bg-teal-600 text-white px-2 py-0.5 rounded-full font-bold">AI OCR</span>
+                      {isScanningModalDismissed && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsScanningModalDismissed(false)}
+                          className="h-6 text-[11px] text-emerald-700 dark:text-emerald-300 hover:underline p-0 font-medium"
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1" />
+                          {isBn ? 'ডায়ালগ দেখুন' : 'View Dialog'}
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1230,10 +1373,32 @@ export const PrescriptionAnalysisPage: React.FC = () => {
       {/* Premium AI Prescription Optical Scanning Modal */}
       <PrescriptionScanningModal
         isOpen={(isScanningFile || isAnalyzing) && !isScanningModalDismissed}
-        onClose={() => setIsScanningModalDismissed(true)}
+        onCancel={() => {
+          setIsScanningFile(false);
+          setIsAnalyzing(false);
+          setIsScanningModalDismissed(true);
+          toast.info(isBn ? 'প্রেসক্রিপশন বিশ্লেষণ বাতিল করা হয়েছে' : 'Prescription analysis cancelled');
+        }}
+        onBackground={() => {
+          setIsScanningModalDismissed(true);
+          toast.info(
+            isBn
+              ? 'প্রেসক্রিপশন এআই বিশ্লেষণ ব্যাকগ্রাউন্ডে চলছে...'
+              : 'Prescription AI analysis is running in the background...'
+          );
+        }}
         filePreview={filePreview}
         fileName={file?.name}
         isAnalyzing={isAnalyzing}
+      />
+
+      {/* Live Optical Camera Modal */}
+      <PrescriptionCameraModal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        onCapture={(photoFile) => {
+          processSelectedFile(photoFile);
+        }}
       />
     </div>
   );

@@ -5,13 +5,17 @@ import {
   Circle,
   FileText,
   Loader2,
+  XCircle,
+  EyeOff,
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 
 interface PrescriptionScanningModalProps {
   isOpen: boolean;
-  onClose?: () => void;
+  onCancel?: () => void;
+  onBackground?: () => void;
   filePreview: string | null;
   fileName?: string;
   isAnalyzing?: boolean;
@@ -31,6 +35,8 @@ const SCAN_STEPS_BN = [
 
 export const PrescriptionScanningModal: React.FC<PrescriptionScanningModalProps> = ({
   isOpen,
+  onCancel,
+  onBackground,
   filePreview,
   fileName,
 }) => {
@@ -75,7 +81,7 @@ export const PrescriptionScanningModal: React.FC<PrescriptionScanningModalProps>
   }, [isOpen, steps.length]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => { /* Locked during analysis */ }}>
+    <Dialog open={isOpen} onOpenChange={() => { /* Locked against accidental outside dismiss */ }}>
       <DialogContent
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
@@ -203,14 +209,33 @@ export const PrescriptionScanningModal: React.FC<PrescriptionScanningModalProps>
             })}
           </div>
 
-          {/* Footer - Lock Notice */}
-          <div className="pt-3 border-t border-border/50 flex items-center justify-center text-center">
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-medium">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {isBn
-                ? 'অনুগ্রহ করে কয়েক সেকেন্ড অপেক্ষা করুন, উইন্ডোটি বন্ধ করবেন না'
-                : 'Please wait a few seconds, do not close this window'}
-            </p>
+          {/* Footer - Cancel & Background Action Controls */}
+          <div className="pt-3 border-t border-border/50 flex items-center justify-between gap-3">
+            {onCancel && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onCancel}
+                className="h-8 px-3 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg gap-1.5 transition-colors font-medium"
+              >
+                <XCircle className="h-3.5 w-3.5" />
+                <span>{isBn ? 'বাতিল করুন' : 'Cancel'}</span>
+              </Button>
+            )}
+
+            {onBackground && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onBackground}
+                className="h-8 px-3 text-xs border-emerald-500/30 text-emerald-700 dark:text-emerald-300 bg-emerald-500/5 hover:bg-emerald-500/15 rounded-lg gap-1.5 transition-colors font-medium ml-auto shadow-sm"
+              >
+                <EyeOff className="h-3.5 w-3.5" />
+                <span>{isBn ? 'ব্যাকগ্রাউন্ডে চালান' : 'Run in Background'}</span>
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>
