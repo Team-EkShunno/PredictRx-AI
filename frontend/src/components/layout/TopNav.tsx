@@ -126,7 +126,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenMobile }) => {
   return (
     <header className="sticky top-0 z-30 flex h-14 sm:h-16 w-full items-center justify-between border-b border-border bg-card/95 px-2.5 sm:px-6 backdrop-blur-md">
       {/* Left: Mobile trigger & Page title */}
-      <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 mr-1.5 sm:mr-3">
+      <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 mr-1.5 sm:mr-3">
         <button
           onClick={onOpenMobile}
           className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground lg:hidden hover:bg-muted"
@@ -135,12 +135,12 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenMobile }) => {
           <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
 
-        {/* On Mobile: Compact Brand Badge (Zero Duplication with page content) */}
-        <div className="flex md:hidden items-center space-x-2 min-w-0">
+        {/* On Mobile: Compact Brand Badge */}
+        <div className="flex md:hidden items-center space-x-2 shrink-0">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm shrink-0">
             <Stethoscope className="h-4 w-4" />
           </div>
-          <div className="flex items-center space-x-1.5 whitespace-nowrap">
+          <div className="hidden sm:flex items-center space-x-1.5 whitespace-nowrap">
             <span className="font-bold text-sm tracking-tight text-foreground">
               PredictRx
             </span>
@@ -280,11 +280,11 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenMobile }) => {
 
         {/* Dynamic Clinician Authentication Profile / Login Options */}
         {isAuthenticated && user ? (
-          <div ref={userMenuRef} className="relative hidden sm:block">
+          <div ref={userMenuRef} className="relative">
             <button
               type="button"
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center space-x-2 pl-2 border-l border-border hover:opacity-90 transition-opacity focus:outline-none"
+              className="flex items-center space-x-1.5 pl-1.5 sm:pl-2 border-l border-border hover:opacity-90 transition-opacity focus:outline-none"
               aria-label="Clinician Profile Menu"
             >
               <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
@@ -359,20 +359,21 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenMobile }) => {
             )}
           </div>
         ) : (
-          <div className="flex items-center space-x-1.5 pl-2 border-l border-border">
+          <div className="flex items-center space-x-1 sm:space-x-1.5 pl-1.5 sm:pl-2 border-l border-border shrink-0">
             <Button
               variant="outline"
               size="sm"
               onClick={openLogin}
-              className="h-8 px-2.5 text-xs font-semibold border-primary/40 text-primary hover:bg-primary/10 gap-1.5"
+              className="h-8 px-2 sm:px-2.5 text-xs font-semibold border-primary/40 text-primary hover:bg-primary/10 gap-1.5"
+              title={isBn ? 'লগইন' : 'Sign In'}
             >
               <LogIn className="h-3.5 w-3.5" />
-              <span>{isBn ? 'লগইন' : 'Sign In'}</span>
+              <span className="hidden sm:inline">{isBn ? 'লগইন' : 'Sign In'}</span>
             </Button>
             <Button
               size="sm"
               onClick={openRegister}
-              className="h-8 px-2.5 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
+              className="hidden sm:inline-flex h-8 px-2.5 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
             >
               <UserPlus className="h-3.5 w-3.5" />
               <span className="hidden md:inline">{isBn ? 'নিবন্ধন' : 'Register'}</span>

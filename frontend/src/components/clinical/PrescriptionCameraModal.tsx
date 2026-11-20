@@ -1,8 +1,18 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Camera, RefreshCw, X, Check, FlipHorizontal, AlertCircle } from 'lucide-react';
+import {
+  Camera,
+  RefreshCw,
+  X,
+  Check,
+  FlipHorizontal,
+  AlertCircle,
+  Maximize2,
+  Minimize2,
+} from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface PrescriptionCameraModalProps {
   isOpen: boolean;
@@ -25,6 +35,7 @@ export const PrescriptionCameraModal: React.FC<PrescriptionCameraModalProps> = (
   const [capturedDataUrl, setCapturedDataUrl] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isLoadingCamera, setIsLoadingCamera] = useState<boolean>(true);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   // Stop video stream safely
   const stopStream = useCallback(() => {
@@ -78,6 +89,7 @@ export const PrescriptionCameraModal: React.FC<PrescriptionCameraModalProps> = (
       stopStream();
       setCapturedDataUrl(null);
       setCameraError(null);
+      setIsFullscreen(false);
     }
     return () => {
       stopStream();
@@ -131,9 +143,16 @@ export const PrescriptionCameraModal: React.FC<PrescriptionCameraModalProps> = (
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-lg w-[95vw] p-0 overflow-hidden bg-slate-950 text-white border border-emerald-500/30 rounded-2xl shadow-2xl gap-0">
+      <DialogContent
+        className={cn(
+          'p-0 overflow-hidden bg-slate-950 text-white gap-0 select-none z-50 transition-all duration-200 [&>button]:hidden',
+          isFullscreen
+            ? 'fixed inset-0 left-0 top-0 translate-x-0 translate-y-0 transform-none w-screen h-screen max-w-none max-h-none rounded-none m-0 border-0 flex flex-col'
+            : 'max-w-xl w-[95vw] border border-emerald-500/30 rounded-2xl shadow-2xl'
+        )}
+      >
         {/* Header */}
-        <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/80">
+        <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 shrink-0">
           <div className="flex items-center space-x-2">
             <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
               <Camera className="h-4 w-4" />
@@ -143,19 +162,51 @@ export const PrescriptionCameraModal: React.FC<PrescriptionCameraModalProps> = (
             </span>
           </div>
 
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-7 w-7 rounded-full text-slate-400 hover:text-white hover:bg-slate-800"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center space-x-1">
+            {/* Fullscreen Toggle Button */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              title={
+                isFullscreen
+                  ? isBn
+                    ? 'স্বাভাবিক স্ক্রিন'
+                    : 'Exit Fullscreen'
+                  : isBn
+                  ? 'ফুলস্ক্রিন করুন'
+                  : 'Fullscreen'
+              }
+              className="h-7 w-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+            >
+              {isFullscreen ? (
+                <Minimize2 className="h-4 w-4 text-emerald-400" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+            </Button>
+
+            {/* Single, Dedicated Close Button (Radix default is hidden) */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-7 w-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Viewport Area */}
-        <div className="relative aspect-[4/3] bg-black flex items-center justify-center overflow-hidden select-none">
+        <div
+          className={cn(
+            'relative bg-black flex items-center justify-center overflow-hidden',
+            isFullscreen ? 'flex-1 w-full min-h-0' : 'aspect-[4/3] w-full'
+          )}
+        >
           {cameraError ? (
             <div className="p-6 text-center text-rose-400 space-y-2">
               <AlertCircle className="h-10 w-10 mx-auto opacity-80" />
@@ -172,7 +223,7 @@ export const PrescriptionCameraModal: React.FC<PrescriptionCameraModalProps> = (
               </Button>
             </div>
           ) : capturedDataUrl ? (
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full flex items-center justify-center bg-black">
               <img
                 src={capturedDataUrl}
                 alt="Captured prescription"
@@ -197,15 +248,15 @@ export const PrescriptionCameraModal: React.FC<PrescriptionCameraModalProps> = (
                 ref={videoRef}
                 playsInline
                 muted
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
 
               {/* Viewfinder Target Framing Brackets */}
-              <div className="absolute inset-8 pointer-events-none border border-emerald-500/25 rounded-lg">
-                <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-emerald-400" />
-                <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-emerald-400" />
-                <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-emerald-400" />
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-emerald-400" />
+              <div className="absolute inset-6 sm:inset-10 pointer-events-none border border-emerald-500/25 rounded-lg">
+                <div className="absolute -top-1 -left-1 w-5 h-5 border-t-2 border-l-2 border-emerald-400" />
+                <div className="absolute -top-1 -right-1 w-5 h-5 border-t-2 border-r-2 border-emerald-400" />
+                <div className="absolute -bottom-1 -left-1 w-5 h-5 border-b-2 border-l-2 border-emerald-400" />
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 border-b-2 border-r-2 border-emerald-400" />
               </div>
 
               {/* Top guidance notice */}
@@ -221,7 +272,7 @@ export const PrescriptionCameraModal: React.FC<PrescriptionCameraModalProps> = (
         </div>
 
         {/* Action Controls Footer */}
-        <div className="p-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between">
+        <div className="p-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between shrink-0">
           {capturedDataUrl ? (
             <>
               <Button
