@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 interface BanglaCompanionProps {
   data: BanglaData;
   patientName?: string;
@@ -202,7 +204,7 @@ export const BanglaPatientCompanion: React.FC<BanglaCompanionProps> = ({
     }
 
     // Silently pre-fetch TTS in background so clicking Play is instantaneous
-    fetch('/api/v1/predict-rx/tts', {
+    fetch(`${BASE_URL}/api/v1/predict-rx/tts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: speechText, lang: isBn ? 'bn' : 'en' }),
@@ -300,7 +302,7 @@ export const BanglaPatientCompanion: React.FC<BanglaCompanionProps> = ({
     setIsPlaying(true);
 
     try {
-      const response = await fetch('/api/v1/predict-rx/tts', {
+      const response = await fetch(`${BASE_URL}/api/v1/predict-rx/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: fullSpeechText, lang: isBn ? 'bn' : 'en' }),
