@@ -20,7 +20,6 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { checkBackendHealth } from '@/services/apiClient';
 import { LanguageToggle } from './LanguageToggle';
 
 interface TopNavProps {
@@ -34,10 +33,6 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenMobile }) => {
   const isBn = i18n.language === 'bn';
   const { user, isAuthenticated, logout, openLogin, openRegister } = useAuth();
 
-  const [backendStatus, setBackendStatus] = useState<{ online: boolean; message: string }>({
-    online: false,
-    message: 'Checking backend status...',
-  });
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -50,14 +45,6 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenMobile }) => {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    checkBackendHealth().then(setBackendStatus);
-    const interval = setInterval(() => {
-      checkBackendHealth().then(setBackendStatus);
-    }, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   const pathBase = '/' + location.pathname.split('/')[1];
@@ -158,32 +145,10 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenMobile }) => {
         </div>
       </div>
 
-      {/* Right controls: Language Toggle, Backend Status, Notifications, Theme, Profile */}
-      <div className="flex items-center space-x-1 sm:space-x-2.5 shrink-0">
+      {/* Right controls: Language Toggle, Notifications, Theme, Profile */}
+      <div className="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
         {/* Global Language Toggle */}
         <LanguageToggle />
-
-        {/* API Connection Indicator */}
-        <div
-          className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs border font-medium cursor-default"
-          title={backendStatus.message}
-        >
-          {backendStatus.online ? (
-            <>
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-emerald-700 dark:text-emerald-400">
-                {t('safety.fastapiLive', { ns: 'common', defaultValue: 'FastAPI Live' })}
-              </span>
-            </>
-          ) : (
-            <>
-              <span className="h-2 w-2 rounded-full bg-blue-500" />
-              <span className="text-blue-700 dark:text-blue-300">
-                {t('safety.safeDemoAdapter', { ns: 'common', defaultValue: 'Safe Demo Adapter' })}
-              </span>
-            </>
-          )}
-        </div>
 
         {/* Clinical Alert Notification Button */}
         <div className="relative">

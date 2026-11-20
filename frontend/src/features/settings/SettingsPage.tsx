@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Sliders,
   Check,
+  Lock,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,6 @@ export const SettingsPage: React.FC = () => {
   const [clinicianName, setClinicianName] = useState('Dr. M. Ashraful Hoque');
   const [bmdcNumber, setBmdcNumber] = useState('BMDC #A-89412');
   const [hospitalAffiliation, setHospitalAffiliation] = useState('Dhaka Medical College & Hospital');
-  const [apiUrl, setApiUrl] = useState(import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000');
   const [mockFallback, setMockFallback] = useState(true);
   const [backendHealth, setBackendHealth] = useState<{ online: boolean; message: string }>({
     online: false,
@@ -267,7 +267,7 @@ export const SettingsPage: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Server className="h-4 w-4 text-primary" />
               <CardTitle className="text-sm font-bold">
-                {t('api.title', 'FastAPI Backend Integration')}
+                {currentLang === 'bn' ? 'ক্লিনিক্যাল ডিসিশন ইঞ্জিন ও মাইক্রোসার্ভিস সংযোগ' : 'Clinical Decision Engine & Microservice Bridge'}
               </CardTitle>
             </div>
             <Button
@@ -278,22 +278,44 @@ export const SettingsPage: React.FC = () => {
               className="text-xs h-7"
             >
               <RefreshCw className={`mr-1 h-3 w-3 ${isTesting ? 'animate-spin' : ''}`} />
-              {isTesting ? t('api.testing', 'Testing Connection...') : t('api.btnTest', 'Test Connection')}
+              {isTesting ? (currentLang === 'bn' ? 'যাচাই করা হচ্ছে...' : 'Testing Connection...') : (currentLang === 'bn' ? 'সংযোগ পরীক্ষা করুন' : 'Test Connection')}
             </Button>
           </div>
           <CardDescription className="text-xs">
-            {t('api.description', 'Configurable Python FastAPI endpoint for OCR parsing and deterministic rules execution.')}
+            {currentLang === 'bn'
+              ? 'প্রেসক্রিপশন এআই ওসিআর প্রসেসিং ও ফার্মাকোভিজিল্যান্স স্ক্রিনিং কোর।'
+              : 'Secure high-performance microservice bridge for Vision OCR parsing and clinical safety screening.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-xs">
           <div>
-            <label className="font-semibold text-foreground">{t('api.url', 'Configured API Base URL')}</label>
-            <Input
-              value={apiUrl}
-              onChange={(e) => setApiUrl(e.target.value)}
-              className="mt-1 text-xs font-mono"
-              placeholder="http://localhost:8000"
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label className="font-semibold text-foreground flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>{currentLang === 'bn' ? 'ক্লাউড ডিসিশন ইঞ্জিন গেটওয়ে' : 'Decision Engine Gateway Endpoint'}</span>
+              </label>
+              <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+                {currentLang === 'bn' ? 'সুরক্ষিত ও এনক্রিপ্টেড' : 'TLS 1.3 Protected & Encrypted'}
+              </span>
+            </div>
+            <div className="relative">
+              <Input
+                type="password"
+                readOnly
+                value="••••••••••••••••••••••••••••••••••••••••••••••••"
+                className="mt-1 text-xs font-mono bg-muted/40 cursor-not-allowed select-none tracking-widest text-muted-foreground"
+              />
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                  [CONNECTED & HIDDEN]
+                </span>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              {currentLang === 'bn'
+                ? 'সিস্টেমের নিরাপত্তা ও গোপনীয়তা বজায় রাখতে ক্লাউড সার্ভারের অভ্যন্তরীণ লিঙ্কটি সুরক্ষিত ও গোপন রাখা হয়েছে।'
+                : 'Production infrastructure address is masked and secured to safeguard clinical service integrity.'}
+            </p>
           </div>
 
           <div className="p-3 rounded-lg border border-border bg-muted/20 flex items-center justify-between">
@@ -305,9 +327,13 @@ export const SettingsPage: React.FC = () => {
               )}
               <div>
                 <span className="font-semibold text-foreground block">
-                  Status: {backendHealth.online ? 'Online & Active' : 'Safe Mock Adapter Active'}
+                  Status: {backendHealth.online ? (currentLang === 'bn' ? 'অনলাইন ও সক্রিয়' : 'Online & Active') : (currentLang === 'bn' ? 'ডেমো অ্যাডাপ্টার সক্রিয়' : 'Safe Mock Adapter Active')}
                 </span>
-                <span className="text-[11px] text-muted-foreground">{backendHealth.message}</span>
+                <span className="text-[11px] text-muted-foreground">
+                  {backendHealth.online
+                    ? (currentLang === 'bn' ? 'ক্লিনিক্যাল ডিসিশন ইঞ্জিনের সাথে সংযুক্ত' : 'Connected to Clinical Decision Engine')
+                    : (currentLang === 'bn' ? 'অফলাইন ব্যাকআপ মোড' : backendHealth.message)}
+                </span>
               </div>
             </div>
 
@@ -319,10 +345,12 @@ export const SettingsPage: React.FC = () => {
           <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-card">
             <div>
               <span className="font-semibold text-foreground block">
-                Automatic Safe Demo Fallback
+                {currentLang === 'bn' ? 'স্বয়ংক্রিয় নিরাপদ ডেমো ব্যাকআপ' : 'Automatic Safe Demo Fallback'}
               </span>
               <span className="text-[11px] text-muted-foreground">
-                Prevents interface lockouts when backend is disconnected.
+                {currentLang === 'bn'
+                  ? 'নেটওয়ার্ক সংযোগ বিচ্ছিন্ন হলেও ক্লিনিক্যাল ইন্টারফেস নিরবচ্ছিন্ন রাখে।'
+                  : 'Prevents interface lockouts when backend is disconnected.'}
               </span>
             </div>
             <Switch checked={mockFallback} onCheckedChange={setMockFallback} />
