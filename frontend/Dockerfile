@@ -27,20 +27,21 @@ RUN npm run build
 # Stage 2: Serve with lightweight Nginx
 FROM nginx:alpine
 
-# Default port for local / container runtime
+# Default port
 ENV PORT=80
 
 # Copy built distribution from stage 1 (clean overwrite of default html)
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy customized Nginx template for dynamic PORT substitution by docker-entrypoint
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+# Copy customized Nginx configuration directly to default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose standard HTTP port
-EXPOSE 80
+# Expose standard HTTP and alternative ports
+EXPOSE 80 8000 3000
 
-# Healthcheck
+# Healthcheck testing local endpoint
 HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \
-    CMD wget -q --spider http://127.0.0.1:${PORT}/health || exit 1
+    CMD wget -q --spider http://127.0.0.1:80/health || exit 1
 
-CMD ["nginx", "-g", "daemon off;"]
+# Start Nginx: if dynamic PORT is set by Railway and differs from 80/8000/3000, dynamically add it
+CMD ["/bin/sh", "-c", "if [ -n \"$PORT\" ] && [ \"$PORT\" != \"80\" ] && [ \"$PORT\" != \"8000\" ] && [ \"$PORT\" != \"3000\" ]; then sed -i \"s/listen 80 default_server;/listen $PORT default_server;\\n    listen 80;/\" /etc/nginx/conf.d/default.conf; fi && exec nginx -g 'daemon off;'"]
